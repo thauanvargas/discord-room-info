@@ -209,7 +209,7 @@ public class DCRoomInfo extends ExtensionForm {
             for(Player user : playerList) {
                 String userName = user.getName();
                 i++;
-                userObjectValue.append("- ").append(userName).append(" " + i).append("\n");
+                userObjectValue.append("- ").append(userName).append("\n");
                 System.out.println(userObjectValue);
 
                 if(j % 10 == 0) {
