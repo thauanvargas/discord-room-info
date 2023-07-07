@@ -12,6 +12,9 @@ import javafx.scene.paint.Color;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import javax.swing.Timer;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,7 +29,7 @@ import java.util.*;
 @ExtensionInfo(
         Title = "Discord Room Info",
         Description = "Webhook for passing room user info to Discord",
-        Version = "1.2",
+        Version = "1.3",
         Author = "Thauan"
 )
 
@@ -224,47 +227,31 @@ public class DCRoomInfo extends ExtensionForm {
         embedObject.put("title", roomName);
         embedObject.put("url", "https://www.habbo" + codeToDomainMap.get(host) + "/room/" + roomId);
         if(playerList.size() >= 1) {
-            embedObject.put("description", "\nRoom ID: " + roomId + "\nThere's currently " + playerList.size() + " users at the room!\n### Users:");
+            embedObject.put("description", "\nRoom ID: " + roomId + "\nThere's currently **" + playerList.size() + "** users at the room!\n### Users:");
         }else {
             embedObject.put("description", "\nRoom ID: " + roomId + "\nThere's no users in the room right now!");
         }
         embedObject.put("color", 15258703);
 
-        JSONArray embedsFieldsArray = new JSONArray();
 
-        JSONObject embedFieldsUsersObject = new JSONObject();
-        StringBuilder userObjectValue = new StringBuilder();
-
-        if(playerList.size() >= 1) {
-
-
-            int j = 1;
-            int i = 0;
-            for(Player user : playerList) {
-                String userName = user.getName();
-                i++;
-                userObjectValue.append("- ").append(userName).append("\n");
-
-                if(j % 10 == 0) {
-                    embedFieldsUsersObject.put("name", "");
-                    embedFieldsUsersObject.put("value", userObjectValue);
-                    embedFieldsUsersObject.put("inline", true);
-                    embedsFieldsArray.put(embedFieldsUsersObject);
-                    embedFieldsUsersObject = new JSONObject();
-                    userObjectValue = new StringBuilder();
-                }
-
-                j++;
-            }
-
-            if(playerList.size() % 10 != 0 || playerList.size() < 10) {
-                embedFieldsUsersObject.put("name", "");
-                embedFieldsUsersObject.put("value", userObjectValue);
-                embedsFieldsArray.put(embedFieldsUsersObject);
-            }
-
-
-        }
+        // Thanks to WiredSpast for better coding
+        JSONArray embedsFieldsArray = new JSONArray(
+                IntStream.range(0, playerList.size())
+                        .boxed()
+                        .collect(Collectors.groupingBy(i -> i/10))
+                        .values()
+                        .stream()
+                        .map(section -> section.stream()
+                                .map(i -> "- " + playerList.get(i).getName())
+                                .collect(Collectors.joining("\n"))
+                        )
+                        .map(section -> new JSONObject()
+                                .put("name", "")
+                                .put("value", section)
+                                .put("inline", true)
+                        )
+                        .toArray()
+        );
 
         JSONObject embedFieldsFooterObject = new JSONObject();
 
@@ -279,6 +266,8 @@ public class DCRoomInfo extends ExtensionForm {
         discordPayload.put("embeds", embedsArray);
 
         String content = discordPayload.toString();
+
+        System.out.println(content);
 
         sendJsonRequest(webhookTextField.getText(), content);
     }
@@ -311,6 +300,8 @@ public class DCRoomInfo extends ExtensionForm {
             enabled = false;
             System.out.println(e.getMessage());
             Platform.runLater(() -> {
+                webhookTextField.setDisable(false);
+                delayTextField.setDisable(false);
                 labelInfo.setText("There was a error, please check the webhook");
                 labelInfo.setTextFill(Color.RED);
             });
