@@ -9,7 +9,7 @@
 
 <AnchorPane prefHeight="384.0" prefWidth="455.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="DCRoomInfo">
    <children>
-      <Label layoutX="30.0" layoutY="33.0" text="Discord Room Informer v1.0" />
+      <Label fx:id="extensionName" layoutX="30.0" layoutY="33.0" text="Discord Room Informer" />
       <Button fx:id="enableButton" layoutX="202.0" layoutY="372.0" mnemonicParsing="false" onAction="#enableButtonClick" text="Enable" />
       <Label layoutX="27.0" layoutY="305.0" text="Web Hook:" />
       <TextField fx:id="webhookTextField" layoutX="95.0" layoutY="301.0" />
@@ -24,10 +24,12 @@
       <Label layoutX="52.0" layoutY="337.0" text="Delay:" />
       <Button fx:id="testWebHookButton" layoutX="256.0" layoutY="301.0" mnemonicParsing="false" onAction="#testWebHook" text="Test" />
       <Label layoutX="142.0" layoutY="337.0" text="secs" />
-      <ListView fx:id="playerListView" layoutX="30.0" layoutY="193.0" prefHeight="66.0" prefWidth="266.0" />
+      <ListView fx:id="playerListView" layoutX="30.0" layoutY="193.0" prefHeight="66.0" prefWidth="404.0" />
       <Label layoutX="29.0" layoutY="274.0" text="Bot Name:" />
       <TextField fx:id="botNameTextField" layoutX="95.0" layoutY="270.0" prefHeight="25.0" prefWidth="79.0" />
       <Label fx:id="webhookTimerLabel" layoutX="275.0" layoutY="376.0" prefHeight="17.0" prefWidth="127.0" />
-      <Label fx:id="roomInfoLabel1" layoutX="30.0" layoutY="174.0" text="Username List:" />
+      <Label layoutX="30.0" layoutY="174.0" text="Username List:" />
+      <Label layoutX="183.0" layoutY="274.0" text="Bot Image Link:" />
+      <TextField fx:id="botImageTextField" layoutX="275.0" layoutY="270.0" prefHeight="25.0" prefWidth="100.0" />
    </children>
 </AnchorPane>

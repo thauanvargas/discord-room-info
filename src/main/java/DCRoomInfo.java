@@ -26,7 +26,7 @@ import java.util.*;
 @ExtensionInfo(
         Title = "Discord Room Info",
         Description = "Webhook for passing room user info to Discord",
-        Version = "1.1",
+        Version = "1.2",
         Author = "Thauan"
 )
 
@@ -53,6 +53,8 @@ public class DCRoomInfo extends ExtensionForm {
     public long startTime;
     public Timer updateTimer;
     public Label webhookTimerLabel;
+    public Label extensionName;
+    public TextField botImageTextField;
 
     private static final TreeMap<String, String> codeToDomainMap = new TreeMap<>();
     static {
@@ -66,6 +68,7 @@ public class DCRoomInfo extends ExtensionForm {
         codeToDomainMap.put("tr", ".com.tr");
         codeToDomainMap.put("us", ".com");
     }
+
 
     @Override
     protected void onStartConnection() {
@@ -91,6 +94,8 @@ public class DCRoomInfo extends ExtensionForm {
         enableButton.setDisable(true);
         delayTextField.setText("300");
         botNameTextField.setText("Thauan");
+        botImageTextField.setText("https://xeol.online/images/logo_xeol_1.gif");
+        extensionName.setText("Discord Room Informer v" + this.getInfoAnnotations().Version());
 
         timerSendPayload = new Timer(10000, e -> {
             if(enabled) {
@@ -204,7 +209,7 @@ public class DCRoomInfo extends ExtensionForm {
     public void sendPayload() {
         JSONObject discordPayload = new JSONObject();
         discordPayload.put("username", botNameTextField.getText());
-        discordPayload.put("avatar_url", "https://xeol.online/images/logo_xeol_1.gif");
+        discordPayload.put("avatar_url", botImageTextField.getText());
         discordPayload.put("content", "");
 
         JSONArray embedsArray = new JSONArray();
@@ -212,7 +217,7 @@ public class DCRoomInfo extends ExtensionForm {
 
         JSONObject embedAuthorObject = new JSONObject();
         embedAuthorObject.put("name", "Room Information");
-        embedAuthorObject.put("url", "https://i.imgur.com/RpXxHEi.png");
+        embedAuthorObject.put("url", "https://github.com/thauanvargas/discord-room-info");
         embedAuthorObject.put("icon_url", "https://i.imgur.com/RpXxHEi.png");
 
         embedObject.put("author", embedAuthorObject);
@@ -313,6 +318,17 @@ public class DCRoomInfo extends ExtensionForm {
     }
 
     public void testWebHook(ActionEvent actionEvent) {
+
+        if(botNameTextField.getText().isEmpty() || botImageTextField.getText().isEmpty()
+                || delayTextField.getText().isEmpty() || webhookTextField.getText().isEmpty()) {
+            Platform.runLater(() -> {
+                labelInfo.setText("Fill all fields please.");
+                labelInfo.setTextFill(Color.RED);
+            });
+
+            return;
+        }
+
         JSONObject discordTestPayload = new JSONObject();
         discordTestPayload.put("username", "Habbo Room Informer");
         discordTestPayload.put("avatar_url", "https://xeol.online/images/logo_xeol_1.gif");
