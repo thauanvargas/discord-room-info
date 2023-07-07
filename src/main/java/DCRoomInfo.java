@@ -20,12 +20,13 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @ExtensionInfo(
         Title = "Discord Room Info",
         Description = "Webhook for passing room user info to Discord",
-        Version = "1.0",
+        Version = "1.1",
         Author = "Thauan"
 )
 
@@ -49,6 +50,9 @@ public class DCRoomInfo extends ExtensionForm {
     public boolean enabled = false;
     public int roomId;
     public String roomName;
+    public long startTime;
+    public Timer updateTimer;
+    public Label webhookTimerLabel;
 
     private static final TreeMap<String, String> codeToDomainMap = new TreeMap<>();
     static {
@@ -89,8 +93,32 @@ public class DCRoomInfo extends ExtensionForm {
         botNameTextField.setText("Thauan");
 
         timerSendPayload = new Timer(10000, e -> {
-            if(enabled)
+            if(enabled) {
                 new Thread(this::sendPayload).start();
+                startTime = System.currentTimeMillis();
+            }
+        });
+
+        updateTimer = new Timer(1, e -> {
+            long now = System.currentTimeMillis();
+            long duration = timerSendPayload.getDelay();
+            long clockTime = now - startTime;
+            String pattern;
+            if(duration >= 3600000) {
+                pattern = "kk:mm:ss";
+            }else {
+                pattern = "mm:ss";
+            }
+            SimpleDateFormat df = new SimpleDateFormat(pattern);
+            if (clockTime >= duration) {
+                clockTime = duration;
+            }
+            long finalClockTime = clockTime;
+            if(df.format(duration - finalClockTime).equals("00")) {
+                Platform.runLater(() -> webhookTimerLabel.setText("Sending..."));
+            }else {
+                Platform.runLater(() -> webhookTimerLabel.setText("Sending in: " + df.format(duration - finalClockTime) + "s"));
+            }
         });
 
         onConnect((host, port, APIVersion, versionClient, client) -> {
@@ -151,7 +179,7 @@ public class DCRoomInfo extends ExtensionForm {
             roomId = hPacket.readInteger();
             roomName = hPacket.readString();
             Platform.runLater(() -> {
-                roomInfoLabel.setText("Name: " + roomName + "\nID: " + roomId + "\nUser Amount: " + playerList.size() + "\nIs loaded: " + true);
+                roomInfoLabel.setText("Name: " + roomName + "\nID: " + roomId + "\nUser Amount: " + playerList.size());
             });
         });
 
@@ -165,6 +193,7 @@ public class DCRoomInfo extends ExtensionForm {
             Platform.runLater(() -> {
                 delayTextField.setDisable(false);
                 webhookTextField.setDisable(false);
+                webhookTimerLabel.setVisible(false);
                 enableButton.setText("Enable");
                 labelInfo.setText("The webhook was disabled, because you changed room.");
                 labelInfo.setTextFill(Color.RED);
@@ -210,7 +239,6 @@ public class DCRoomInfo extends ExtensionForm {
                 String userName = user.getName();
                 i++;
                 userObjectValue.append("- ").append(userName).append("\n");
-                System.out.println(userObjectValue);
 
                 if(j % 10 == 0) {
                     embedFieldsUsersObject.put("name", "");
@@ -225,7 +253,6 @@ public class DCRoomInfo extends ExtensionForm {
             }
 
             if(playerList.size() % 10 != 0 || playerList.size() < 10) {
-                System.out.println("embedField add");
                 embedFieldsUsersObject.put("name", "");
                 embedFieldsUsersObject.put("value", userObjectValue);
                 embedsFieldsArray.put(embedFieldsUsersObject);
@@ -247,8 +274,6 @@ public class DCRoomInfo extends ExtensionForm {
         discordPayload.put("embeds", embedsArray);
 
         String content = discordPayload.toString();
-
-        System.out.println(content);
 
         sendJsonRequest(webhookTextField.getText(), content);
     }
@@ -277,6 +302,7 @@ public class DCRoomInfo extends ExtensionForm {
             }
         }catch (IOException e){
             enableButton.setDisable(true);
+            webhookTimerLabel.setVisible(false);
             enabled = false;
             System.out.println(e.getMessage());
             Platform.runLater(() -> {
@@ -319,22 +345,28 @@ public class DCRoomInfo extends ExtensionForm {
         enabled = !enabled;
 
         if(enabled) {
+            startTime = System.currentTimeMillis();
+            updateTimer.start();
             timerSendPayload.setDelay(Integer.parseInt(delayTextField.getText()) * 1000);
             timerSendPayload.start();
             Platform.runLater(() -> {
                 delayTextField.setDisable(true);
                 webhookTextField.setDisable(true);
+                webhookTimerLabel.setVisible(true);
                 enableButton.setText("Disable");
                 labelInfo.setText("The webhook was enabled, you should get info shortly.");
                 labelInfo.setTextFill(Color.GREEN);
             });
         }else {
+            startTime = System.currentTimeMillis();
+            updateTimer.stop();
             timerSendPayload.stop();
             Platform.runLater(() -> {
                 delayTextField.setDisable(false);
                 webhookTextField.setDisable(false);
+                webhookTimerLabel.setVisible(false);
                 enableButton.setText("Enable");
-                labelInfo.setText("The webhook was disabled, you should get info shortly.");
+                labelInfo.setText("The webhook was disabled.");
                 labelInfo.setTextFill(Color.RED);
             });
         }
